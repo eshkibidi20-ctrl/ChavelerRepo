@@ -9,6 +9,13 @@ import VisaAssistance from '@/pages/VisaAssistance';
 import Checkout from '@/pages/Checkout';
 import Account from '@/pages/Account';
 import MiniCart from '@/components/ui/MiniCart';
+import AdminLayout from '@/components/layout/AdminLayout';
+import AdminDashboard from '@/pages/admin/Dashboard';
+import AdminBookings from '@/pages/admin/Bookings';
+import AdminPackages from '@/pages/admin/Packages';
+import AdminVisaInquiries from '@/pages/admin/VisaInquiries';
+import AdminUsers from '@/pages/admin/Users';
+import AdminSettings from '@/pages/admin/Settings';
 import { useState } from 'react';
 
 function AppShell() {
@@ -22,6 +29,14 @@ function AppShell() {
       <Route path="/visa-assistance" element={<VisaAssistance />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/account" element={<Account />} />
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="bookings" element={<AdminBookings />} />
+        <Route path="packages" element={<AdminPackages />} />
+        <Route path="visa-inquiries" element={<AdminVisaInquiries />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="settings" element={<AdminSettings />} />
+      </Route>
     </Routes>
     <Footer />
     {cartOpen && <MiniCart onClose={() => setCartOpen(false)} />}
