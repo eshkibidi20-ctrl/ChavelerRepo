@@ -6,6 +6,230 @@ import { useCart } from '@/context/CartContext';
 import MiniCart from '@/components/ui/MiniCart';
 import Stepper from '@/components/ui/Stepper';
 
-const peso = (value: number) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(value);
+const peso = (value: number) =>
+  new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    maximumFractionDigits: 0,
+  }).format(value);
 
-export default function PackageDetails() { const { slug } = useParams(); const item = mockPackages.find((entry) => entry.slug === slug) ?? mockPackages[0]; const [date, setDate] = useState('2026-10-18'); const [adults, setAdults] = useState(2); const [children, setChildren] = useState(0); const [openDay, setOpenDay] = useState(0); const [cartOpen, setCartOpen] = useState(false); const { addItem } = useCart(); const navigate = useNavigate(); const total = item.promoPrice * adults + item.promoPrice * .5 * children; const add = () => { addItem(item, date, adults, children); setCartOpen(true); }; return <div><div className="mx-auto max-w-7xl px-5 pt-8 lg:px-8"><Link to="/packages" className="text-xs font-bold text-slate-500 hover:text-teal">← Back to all trips</Link><div className="mt-6 grid gap-3 md:grid-cols-[1.45fr_1fr] md:grid-rows-2"><div className="row-span-2 h-72 overflow-hidden rounded-2xl md:h-[440px]"><img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" /></div><div className="hidden h-[214px] overflow-hidden rounded-2xl md:block"><img src={mockPackages[(mockPackages.indexOf(item) + 1) % mockPackages.length].imageUrl} alt="Travel detail" className="h-full w-full object-cover" /></div><div className="hidden h-[214px] overflow-hidden rounded-2xl md:block"><img src={mockPackages[(mockPackages.indexOf(item) + 2) % mockPackages.length].imageUrl} alt="Travel detail" className="h-full w-full object-cover" /></div></div></div><div className="mx-auto grid max-w-7xl gap-10 px-5 py-10 lg:grid-cols-[1fr_380px] lg:px-8"><div><div className="flex items-center gap-2 text-xs font-bold text-teal"><MapPin size={14} /> {item.destination} · {item.category}</div><h1 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">{item.title}</h1><p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-500">{item.shortDescription}</p><div className="mt-6 flex flex-wrap gap-2"><span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600"><CalendarDays size={13} className="mr-1 inline" /> {item.duration}</span><span className="rounded-full bg-teal/10 px-3 py-2 text-xs font-bold text-teal"><Star size={13} className="mr-1 inline" fill="currentColor" /> 4.9 (126 reviews)</span></div><div className="mt-12 grid gap-8 sm:grid-cols-2"><div><h2 className="font-display text-lg font-bold text-navy">What’s included</h2><ul className="mt-4 space-y-3">{item.inclusions.map((entry) => <li className="flex gap-2 text-sm text-slate-600" key={entry}><Check size={16} className="mt-0.5 shrink-0 text-teal" /> {entry}</li>)}</ul></div><div><h2 className="font-display text-lg font-bold text-navy">Good to know</h2><ul className="mt-4 space-y-3">{item.exclusions.map((entry) => <li className="flex gap-2 text-sm text-slate-500" key={entry}><X size={16} className="mt-0.5 shrink-0 text-slate-400" /> {entry}</li>)}</ul></div></div><div className="mt-12"><h2 className="font-display text-lg font-bold text-navy">Your itinerary</h2><div className="mt-4 divide-y divide-slate-200 rounded-2xl border border-slate-200">{item.itinerary.map((day, index) => <div key={day.day} className="p-4"><button onClick={() => setOpenDay(openDay === index ? -1 : index)} className="flex w-full items-center gap-3 text-left"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-teal/10 text-xs font-extrabold text-teal">{String(day.day).padStart(2, '0')}</span><span className="flex-1 font-display text-sm font-bold text-navy">{day.title}</span><ChevronDown size={17} className={`text-slate-400 transition ${openDay === index ? 'rotate-180' : ''}`} /></button>{openDay === index && <ul className="ml-11 mt-3 space-y-2 text-xs text-slate-500">{day.activities.map((activity) => <li key={activity}>• {activity}</li>)}</ul>}</div>)}</div></div></div><aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/50 lg:sticky lg:top-24"><div className="flex items-end justify-between"><div><span className="text-xs text-slate-400 line-through">{peso(item.regularPrice)}</span><div className="font-display text-2xl font-extrabold text-navy">{peso(item.promoPrice)} <span className="text-xs font-normal text-slate-400">/ person</span></div></div><span className="rounded-full bg-coral/10 px-2 py-1 text-[10px] font-extrabold text-coral">SAVE {item.discountPercent}%</span></div><div className="mt-5 space-y-4 border-t border-slate-100 pt-5"><label className="block text-xs font-bold text-slate-600">Travel date<input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-semibold text-navy outline-none focus:border-teal" /></label><Stepper label="Adults" value={adults} min={1} onChange={setAdults} /><Stepper label="Children" value={children} min={0} onChange={setChildren} /></div><div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4"><span className="text-xs font-semibold text-slate-500">Estimated total</span><span className="font-display text-xl font-extrabold text-navy">{peso(total)}</span></div><button onClick={add} className="mt-4 w-full rounded-xl bg-coral py-3.5 text-sm font-bold text-white shadow-lg shadow-coral/20 transition hover:bg-orange-600">Add to trip cart</button><button onClick={() => { addItem(item, date, adults, children); navigate('/checkout'); }} className="mt-2 w-full rounded-xl border border-slate-200 py-3 text-sm font-bold text-navy transition hover:border-navy">Book now</button><p className="mt-4 text-center text-[10px] font-semibold text-slate-400"><ShieldCheck size={12} className="mr-1 inline text-teal" /> Secure booking · No hidden fees</p></aside></div>{cartOpen && <MiniCart onClose={() => setCartOpen(false)} />}</div> }
+export default function PackageDetails() {
+  const { slug } = useParams();
+  const item = mockPackages.find((entry) => entry.slug === slug);
+
+  // Tomorrow in YYYY-MM-DD so users cannot pick past dates
+  const minDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  const [date, setDate] = useState(minDate);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+  const [openDay, setOpenDay] = useState(0);
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const { addItem } = useCart();
+  const navigate = useNavigate();
+
+  if (!item) {
+    return (
+      <div className="mx-auto max-w-xl px-5 py-24 text-center">
+        <h1 className="font-display text-2xl font-extrabold text-navy">Package not found</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          This tour package may have moved or is no longer available.
+        </p>
+        <Link
+          to="/packages"
+          className="mt-6 inline-block rounded-xl bg-navy px-5 py-3 text-xs font-bold text-white"
+        >
+          Browse all packages
+        </Link>
+      </div>
+    );
+  }
+
+  const childRate = Math.round(item.promoPrice * 0.5);
+  const total = item.promoPrice * adults + childRate * children;
+
+  const handleAddToCart = () => {
+    addItem(item, date, adults, children);
+    setCartOpen(true);
+  };
+
+  return (
+    <div>
+      <div className="mx-auto max-w-7xl px-5 pt-8 lg:px-8">
+        <Link to="/packages" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-teal">
+          ← Back to all trips
+        </Link>
+
+        {/* Clean single hero banner image (avoids mixing unrelated destination photos) */}
+        <div className="mt-5 h-72 overflow-hidden rounded-3xl border border-slate-200 sm:h-96 md:h-[440px]">
+          <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+        </div>
+      </div>
+
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-10 lg:grid-cols-[1fr_390px] lg:px-8">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-bold text-teal">
+            <MapPin size={14} /> {item.destination} · {item.category}
+          </div>
+          <h1 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">
+            {item.title}
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-500">
+            {item.shortDescription}
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            <span className="rounded-full bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600">
+              <CalendarDays size={13} className="mr-1.5 inline" />
+              {item.duration}
+            </span>
+            <span className="rounded-full bg-teal/10 px-3.5 py-2 text-xs font-bold text-teal">
+              <Star size={13} className="mr-1.5 inline" fill="currentColor" />
+              4.9 (126 reviews)
+            </span>
+          </div>
+
+          <div className="mt-12 grid gap-8 sm:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/50 p-5">
+              <h2 className="font-display text-base font-bold text-navy">What’s included</h2>
+              <ul className="mt-4 space-y-3">
+                {item.inclusions.map((entry) => (
+                  <li className="flex gap-2.5 text-sm text-slate-600" key={entry}>
+                    <Check size={16} className="mt-0.5 shrink-0 text-teal" />
+                    <span>{entry}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/50 p-5">
+              <h2 className="font-display text-base font-bold text-navy">Good to know (Exclusions)</h2>
+              <ul className="mt-4 space-y-3">
+                {item.exclusions.map((entry) => (
+                  <li className="flex gap-2.5 text-sm text-slate-500" key={entry}>
+                    <X size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                    <span>{entry}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-12">
+            <h2 className="font-display text-lg font-bold text-navy">Your itinerary</h2>
+            <div className="mt-4 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
+              {item.itinerary.map((day, index) => (
+                <div key={day.day} className="p-4">
+                  <button
+                    type="button"
+                    onClick={() => setOpenDay(openDay === index ? -1 : index)}
+                    className="flex w-full items-center gap-3 text-left"
+                  >
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-teal/10 text-xs font-extrabold text-teal">
+                      {String(day.day).padStart(2, '0')}
+                    </span>
+                    <span className="flex-1 font-display text-sm font-bold text-navy">
+                      {day.title}
+                    </span>
+                    <ChevronDown
+                      size={17}
+                      className={`text-slate-400 transition ${openDay === index ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  {openDay === index && (
+                    <ul className="ml-11 mt-3 space-y-2 text-xs leading-relaxed text-slate-600">
+                      {day.activities.map((activity) => (
+                        <li key={activity}>• {activity}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Sticky Booking Card */}
+        <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 lg:sticky lg:top-24">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <span className="text-xs text-slate-400 line-through">{peso(item.regularPrice)}</span>
+              <div className="font-display text-2xl font-extrabold text-navy">
+                {peso(item.promoPrice)}{' '}
+                <span className="text-xs font-normal text-slate-400">/ adult</span>
+              </div>
+            </div>
+            <span className="rounded-full bg-coral/10 px-2.5 py-1 text-[10px] font-extrabold text-coral">
+              SAVE {item.discountPercent}%
+            </span>
+          </div>
+
+          <div className="mt-5 space-y-4 border-t border-slate-100 pt-5">
+            <label className="block text-xs font-bold text-slate-600">
+              Preferred travel date
+              <input
+                type="date"
+                min={minDate}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-semibold text-navy outline-none focus:border-teal"
+              />
+            </label>
+            <Stepper label="Adults (12+ yrs)" value={adults} min={1} onChange={setAdults} />
+            <div>
+              <Stepper label="Children (3–11 yrs)" value={children} min={0} onChange={setChildren} />
+              <p className="mt-1 text-[11px] text-slate-400">
+                Child rate is 50% off ({peso(childRate)} / child)
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-1.5 border-t border-slate-100 pt-4 text-xs text-slate-500">
+            <div className="flex justify-between">
+              <span>
+                {adults} {adults === 1 ? 'Adult' : 'Adults'} × {peso(item.promoPrice)}
+              </span>
+              <span className="font-semibold text-navy">{peso(item.promoPrice * adults)}</span>
+            </div>
+            {children > 0 && (
+              <div className="flex justify-between">
+                <span>
+                  {children} {children === 1 ? 'Child' : 'Children'} × {peso(childRate)}
+                </span>
+                <span className="font-semibold text-navy">{peso(childRate * children)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs font-bold text-slate-600">Estimated total</span>
+              <span className="font-display text-xl font-extrabold text-navy">{peso(total)}</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="mt-5 w-full rounded-xl bg-coral py-3.5 text-sm font-bold text-white shadow-lg shadow-coral/20 transition hover:bg-orange-600"
+          >
+            Add to trip cart
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              addItem(item, date, adults, children);
+              navigate('/checkout');
+            }}
+            className="mt-2.5 w-full rounded-xl border border-slate-200 py-3 text-sm font-bold text-navy transition hover:border-navy"
+          >
+            Book now
+          </button>
+          <p className="mt-4 text-center text-[10px] font-semibold text-slate-400">
+            <ShieldCheck size={12} className="mr-1 inline text-teal" /> Secure booking · No hidden fees
+          </p>
+        </aside>
+      </div>
+
+      {cartOpen && <MiniCart onClose={() => setCartOpen(false)} />}
+    </div>
+  );
+}
