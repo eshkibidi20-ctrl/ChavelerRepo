@@ -1,15 +1,237 @@
+// AdminDashboard.tsx
 import { useEffect, useState } from 'react';
-import { ArrowUpRight, CalendarDays, ChevronRight, CircleDollarSign, ClipboardList, Package, Plus, TrendingUp, Users, WalletCards } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  ArrowUpRight,
+  CalendarDays,
+  ChevronRight,
+  CircleDollarSign,
+  ClipboardList,
+  Package,
+  Plus,
+  TrendingUp,
+  Users,
+  WalletCards,
+} from 'lucide-react';
 import { getAdminDashboard } from '@/services/adminService';
 import type { AdminDashboardData } from '@/admin/types';
 import AdminStatusBadge from '@/components/ui/AdminStatusBadge';
 
-const peso = (value: number) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(value);
+const peso = (value: number) =>
+  new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    maximumFractionDigits: 0,
+  }).format(value);
 
 export default function AdminDashboard() {
   const [data, setData] = useState<AdminDashboardData | null>(null);
-  useEffect(() => { void getAdminDashboard().then(setData); }, []);
-  if (!data) return <div className="grid min-h-[60vh] place-items-center text-sm text-slate-400">Loading workspace...</div>;
-  const metrics = [{ label: 'Total revenue', value: peso(data.totalRevenue), change: `+${data.revenueChange}%`, icon: CircleDollarSign, tone: 'bg-teal/10 text-teal' }, { label: 'Total bookings', value: data.bookings.toString(), change: `+${data.bookingsChange}%`, icon: ClipboardList, tone: 'bg-orange-50 text-coral' }, { label: 'Pending inquiries', value: data.pendingInquiries.toString(), change: 'Needs attention', icon: CalendarDays, tone: 'bg-blue-50 text-blue-600' }, { label: 'Active packages', value: data.activePackages.toString(), change: '3 drafts', icon: Package, tone: 'bg-slate-100 text-slate-600' }];
-  return <div><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><div className="text-xs font-extrabold uppercase tracking-[.18em] text-teal">Wednesday, November 22, 2026</div><h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">Good morning, Alex.</h1><p className="mt-2 text-sm text-slate-500">Here’s what’s happening across Chaveler today.</p></div><div className="flex gap-2"><button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-navy hover:border-slate-300"><CalendarDays size={15} /> Last 30 days</button><button className="flex items-center gap-2 rounded-xl bg-coral px-4 py-3 text-xs font-bold text-white shadow-lg shadow-coral/15 hover:bg-orange-600"><Plus size={15} /> New package</button></div></div><div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{metrics.map(({ label, value, change, icon: Icon, tone }) => <div className="rounded-2xl border border-slate-200 bg-white p-5" key={label}><div className="flex items-start justify-between"><span className={`grid h-10 w-10 place-items-center rounded-xl ${tone}`}><Icon size={19} /></span><span className="flex items-center gap-1 text-[10px] font-extrabold text-teal"><TrendingUp size={12} /> {change}</span></div><div className="mt-5 text-2xl font-extrabold tracking-tight text-navy">{value}</div><div className="mt-1 text-xs font-semibold text-slate-400">{label}</div></div>)}</div><div className="mt-6 grid gap-6 xl:grid-cols-[1.35fr_.65fr]"><section className="rounded-2xl border border-slate-200 bg-white"><div className="flex items-center justify-between border-b border-slate-100 px-5 py-5"><div><h2 className="font-display text-lg font-bold text-navy">Recent bookings</h2><p className="mt-1 text-xs text-slate-400">The latest activity from your storefront</p></div><a href="/admin/bookings" className="flex items-center gap-1 text-xs font-bold text-teal">View all <ChevronRight size={14} /></a></div><div className="overflow-x-auto"><table className="w-full min-w-[700px] text-left"><thead><tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400"><th className="px-5 py-3">Traveler</th><th className="px-5 py-3">Package</th><th className="px-5 py-3">Date</th><th className="px-5 py-3">Amount</th><th className="px-5 py-3">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{data.recentBookings.slice(0, 4).map((booking) => <tr className="text-xs" key={booking.id}><td className="px-5 py-4"><div className="font-bold text-navy">{booking.traveler}</div><div className="mt-1 text-[10px] text-slate-400">{booking.referenceCode}</div></td><td className="px-5 py-4 font-semibold text-slate-600">{booking.packageTitle}</td><td className="px-5 py-4 text-slate-500">{booking.travelDate}</td><td className="px-5 py-4 font-bold text-navy">{peso(booking.amount)}</td><td className="px-5 py-4"><AdminStatusBadge value={booking.status} /></td></tr>)}</tbody></table></div></section><section className="rounded-2xl border border-slate-200 bg-white p-5"><div className="flex items-center justify-between"><div><h2 className="font-display text-lg font-bold text-navy">Top packages</h2><p className="mt-1 text-xs text-slate-400">By booking volume</p></div><Package size={18} className="text-teal" /></div><div className="mt-5 space-y-4">{data.popularPackages.map((item, index) => <div className="flex items-center gap-3" key={item.id}><span className="grid h-7 w-7 place-items-center rounded-lg bg-slate-50 text-xs font-extrabold text-slate-400">0{index + 1}</span><div className="min-w-0 flex-1"><div className="truncate text-xs font-bold text-navy">{item.title}</div><div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-teal" style={{ width: `${Math.max(28, item.bookings * 1.8)}%` }} /></div></div><span className="text-xs font-extrabold text-navy">{item.bookings}</span></div>)}</div><button className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-xs font-bold text-navy hover:border-slate-300">View performance <ArrowUpRight size={14} /></button></section></div><section className="mt-6 grid gap-4 sm:grid-cols-3"><div className="rounded-2xl bg-navy p-5 text-white"><WalletCards size={20} className="text-teal-200" /><div className="mt-8 text-2xl font-extrabold">₱82.4K</div><div className="mt-1 text-xs text-slate-300">Expected payouts</div></div><div className="rounded-2xl border border-slate-200 bg-white p-5"><Users size={20} className="text-teal" /><div className="mt-8 text-2xl font-extrabold text-navy">1,284</div><div className="mt-1 text-xs text-slate-400">Storefront visitors this month</div></div><div className="rounded-2xl border border-slate-200 bg-white p-5"><CalendarDays size={20} className="text-coral" /><div className="mt-8 text-2xl font-extrabold text-navy">86%</div><div className="mt-1 text-xs text-slate-400">Inquiry response rate</div></div></section></div>;
+
+  useEffect(() => {
+    void getAdminDashboard().then(setData);
+  }, []);
+
+  if (!data) {
+    return (
+      <div className="grid min-h-[60vh] place-items-center text-sm text-slate-400">
+        Loading workspace...
+      </div>
+    );
+  }
+
+  const todayLabel = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  const metrics = [
+    {
+      label: 'Total revenue',
+      value: peso(data.totalRevenue),
+      change: `+${data.revenueChange}%`,
+      icon: CircleDollarSign,
+      tone: 'bg-teal/10 text-teal',
+    },
+    {
+      label: 'Total bookings',
+      value: data.bookings.toString(),
+      change: `+${data.bookingsChange}%`,
+      icon: ClipboardList,
+      tone: 'bg-orange-50 text-coral',
+    },
+    {
+      label: 'Pending inquiries',
+      value: data.pendingInquiries.toString(),
+      change: 'Needs attention',
+      icon: CalendarDays,
+      tone: 'bg-blue-50 text-blue-600',
+    },
+    {
+      label: 'Active packages',
+      value: data.activePackages.toString(),
+      change: '3 drafts',
+      icon: Package,
+      tone: 'bg-slate-100 text-slate-600',
+    },
+  ];
+
+  return (
+    <div>
+      <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+        <div>
+          <div className="text-xs font-extrabold uppercase tracking-[.18em] text-teal">
+            {todayLabel}
+          </div>
+          <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">
+            Good morning, Alex.
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Here’s what’s happening across Chaveler today.
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-navy transition hover:border-slate-300"
+          >
+            <CalendarDays size={15} /> Last 30 days
+          </button>
+          <Link
+            to="/admin/packages"
+            className="flex items-center gap-2 rounded-xl bg-coral px-4 py-3 text-xs font-bold text-white shadow-lg shadow-coral/15 transition hover:bg-orange-600"
+          >
+            <Plus size={15} /> New package
+          </Link>
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map(({ label, value, change, icon: Icon, tone }) => (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5" key={label}>
+            <div className="flex items-start justify-between">
+              <span className={`grid h-10 w-10 place-items-center rounded-xl ${tone}`}>
+                <Icon size={19} />
+              </span>
+              <span className="flex items-center gap-1 text-[10px] font-extrabold text-teal">
+                <TrendingUp size={12} /> {change}
+              </span>
+            </div>
+            <div className="mt-5 text-2xl font-extrabold tracking-tight text-navy">{value}</div>
+            <div className="mt-1 text-xs font-semibold text-slate-400">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
+        <section className="rounded-2xl border border-slate-200 bg-white">
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5">
+            <div>
+              <h2 className="font-display text-lg font-bold text-navy">Recent bookings</h2>
+              <p className="mt-1 text-xs text-slate-400">
+                The latest activity from your storefront
+              </p>
+            </div>
+            <Link
+              to="/admin/bookings"
+              className="flex items-center gap-1 text-xs font-bold text-teal hover:underline"
+            >
+              View all <ChevronRight size={14} />
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px] text-left">
+              <thead>
+                <tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  <th className="px-5 py-3">Traveler</th>
+                  <th className="px-5 py-3">Package</th>
+                  <th className="px-5 py-3">Date</th>
+                  <th className="px-5 py-3">Amount</th>
+                  <th className="px-5 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {data.recentBookings.slice(0, 4).map((booking) => (
+                  <tr className="text-xs" key={booking.id}>
+                    <td className="px-5 py-4">
+                      <div className="font-bold text-navy">{booking.traveler}</div>
+                      <div className="mt-1 text-[10px] text-slate-400">
+                        {booking.referenceCode}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-slate-600">
+                      {booking.packageTitle}
+                    </td>
+                    <td className="px-5 py-4 text-slate-500">{booking.travelDate}</td>
+                    <td className="px-5 py-4 font-bold text-navy">{peso(booking.amount)}</td>
+                    <td className="px-5 py-4">
+                      <AdminStatusBadge value={booking.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-lg font-bold text-navy">Top packages</h2>
+              <p className="mt-1 text-xs text-slate-400">By booking volume</p>
+            </div>
+            <Package size={18} className="text-teal" />
+          </div>
+
+          <div className="mt-5 space-y-4">
+            {data.popularPackages.map((item, index) => (
+              <div className="flex items-center gap-3" key={item.id}>
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-slate-50 text-xs font-extrabold text-slate-400">
+                  0{index + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-bold text-navy">{item.title}</div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-teal"
+                      style={{ width: `${Math.min(100, Math.max(28, item.bookings * 1.8))}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="text-xs font-extrabold text-navy">{item.bookings}</span>
+              </div>
+            ))}
+          </div>
+
+          <Link
+            to="/admin/packages"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-xs font-bold text-navy transition hover:border-slate-300"
+          >
+            View performance <ArrowUpRight size={14} />
+          </Link>
+        </section>
+      </div>
+
+      <section className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl bg-navy p-5 text-white">
+          <WalletCards size={20} className="text-teal-200" />
+          <div className="mt-8 text-2xl font-extrabold">₱82.4K</div>
+          <div className="mt-1 text-xs text-slate-300">Expected payouts</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <Users size={20} className="text-teal" />
+          <div className="mt-8 text-2xl font-extrabold text-navy">1,284</div>
+          <div className="mt-1 text-xs text-slate-400">Storefront visitors this month</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <CalendarDays size={20} className="text-coral" />
+          <div className="mt-8 text-2xl font-extrabold text-navy">86%</div>
+          <div className="mt-1 text-xs text-slate-400">Inquiry response rate</div>
+        </div>
+      </section>
+    </div>
+  );
 }

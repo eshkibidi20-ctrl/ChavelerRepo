@@ -1,15 +1,156 @@
+// AdminBookings.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { Download, Filter, Search, SlidersHorizontal } from 'lucide-react';
 import { getAdminBookings } from '@/services/adminService';
 import type { AdminBooking, AdminBookingStatus } from '@/admin/types';
 import AdminStatusBadge from '@/components/ui/AdminStatusBadge';
 
-const peso = (value: number) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(value);
-const statuses: Array<'All' | AdminBookingStatus> = ['All', 'Confirmed', 'Pending Payment', 'Needs Review', 'Completed'];
+const peso = (value: number) =>
+  new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    maximumFractionDigits: 0,
+  }).format(value);
+
+const statuses: Array<'All' | AdminBookingStatus> = [
+  'All',
+  'Confirmed',
+  'Pending Payment',
+  'Needs Review',
+  'Completed',
+];
 
 export default function AdminBookings() {
-  const [items, setItems] = useState<AdminBooking[]>([]); const [query, setQuery] = useState(''); const [status, setStatus] = useState<'All' | AdminBookingStatus>('All');
-  useEffect(() => { void getAdminBookings().then(setItems); }, []);
-  const filtered = useMemo(() => items.filter((item) => (status === 'All' || item.status === status) && `${item.traveler} ${item.referenceCode} ${item.packageTitle}`.toLowerCase().includes(query.toLowerCase())), [items, query, status]);
-  return <div><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><div className="text-xs font-extrabold uppercase tracking-[.18em] text-teal">Operations</div><h1 className="mt-2 font-display text-3xl font-extrabold text-navy">Bookings</h1><p className="mt-2 text-sm text-slate-500">Review, confirm, and keep every trip moving.</p></div><button className="flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-navy"><Download size={15} /> Export report</button></div><div className="mt-8 rounded-2xl border border-slate-200 bg-white p-3"><div className="flex flex-col gap-3 lg:flex-row"><div className="flex flex-1 items-center gap-2 rounded-xl bg-slate-50 px-3"><Search size={16} className="text-slate-400" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search traveler, reference, or package" className="w-full bg-transparent py-3 text-sm outline-none" /></div><div className="flex gap-2 overflow-x-auto">{statuses.map((item) => <button onClick={() => setStatus(item)} key={item} className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold ${status === item ? 'bg-navy text-white' : 'bg-slate-50 text-slate-500'}`}>{item}</button>)}</div><button className="hidden items-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-500 lg:flex"><SlidersHorizontal size={15} /> Filters</button></div></div><div className="mt-5 flex items-center justify-between text-xs text-slate-400"><span><strong className="text-navy">{filtered.length}</strong> bookings shown</span><span className="flex items-center gap-1"><Filter size={13} /> Sorted by newest</span></div><div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="overflow-x-auto"><table className="w-full min-w-[940px] text-left"><thead><tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400"><th className="px-5 py-4">Traveler</th><th className="px-5 py-4">Trip</th><th className="px-5 py-4">Travel date</th><th className="px-5 py-4">Guests</th><th className="px-5 py-4">Amount</th><th className="px-5 py-4">Status</th><th className="px-5 py-4"></th></tr></thead><tbody className="divide-y divide-slate-100">{filtered.map((booking) => <tr className="text-xs transition hover:bg-slate-50/70" key={booking.id}><td className="px-5 py-4"><div className="font-bold text-navy">{booking.traveler}</div><div className="mt-1 text-[10px] text-slate-400">{booking.email}</div></td><td className="px-5 py-4"><div className="font-bold text-navy">{booking.packageTitle}</div><div className="mt-1 text-[10px] text-slate-400">{booking.destination}</div></td><td className="px-5 py-4 text-slate-500">{booking.travelDate}</td><td className="px-5 py-4 font-semibold text-slate-600">{booking.guests}</td><td className="px-5 py-4 font-bold text-navy">{peso(booking.amount)}</td><td className="px-5 py-4"><AdminStatusBadge value={booking.status} /></td><td className="px-5 py-4"><button className="rounded-lg px-2 py-1 text-xs font-bold text-teal hover:bg-teal/10">View</button></td></tr>)}</tbody></table></div></div></div>;
+  const [items, setItems] = useState<AdminBooking[]>([]);
+  const [query, setQuery] = useState('');
+  const [status, setStatus] = useState<'All' | AdminBookingStatus>('All');
+
+  useEffect(() => {
+    void getAdminBookings().then(setItems);
+  }, []);
+
+  const filtered = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          (status === 'All' || item.status === status) &&
+          `${item.traveler} ${item.referenceCode} ${item.packageTitle} ${item.destination}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+      ),
+    [items, query, status],
+  );
+
+  return (
+    <div>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <div className="text-xs font-extrabold uppercase tracking-[.18em] text-teal">
+            Operations
+          </div>
+          <h1 className="mt-2 font-display text-3xl font-extrabold text-navy">Bookings</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Review, confirm, and keep every trip moving.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-navy transition hover:border-slate-300"
+        >
+          <Download size={15} /> Export report
+        </button>
+      </div>
+
+      <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-3">
+        <div className="flex flex-col gap-3 lg:flex-row">
+          <div className="flex flex-1 items-center gap-2 rounded-xl bg-slate-50 px-3 ring-1 ring-transparent focus-within:bg-white focus-within:ring-teal">
+            <Search size={16} className="text-slate-400" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search traveler, reference, or package"
+              className="w-full bg-transparent py-3 text-sm text-navy outline-none"
+            />
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto">
+            {statuses.map((item) => (
+              <button
+                type="button"
+                onClick={() => setStatus(item)}
+                key={item}
+                className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold transition ${
+                  status === item
+                    ? 'bg-navy text-white'
+                    : 'bg-slate-50 text-slate-500 hover:text-navy'
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="hidden items-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-500 hover:text-navy lg:flex"
+          >
+            <SlidersHorizontal size={15} /> Filters
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-5 flex items-center justify-between text-xs text-slate-400">
+        <span>
+          <strong className="text-navy">{filtered.length}</strong> bookings shown
+        </span>
+        <span className="flex items-center gap-1">
+          <Filter size={13} /> Sorted by newest
+        </span>
+      </div>
+
+      <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[940px] text-left">
+            <thead>
+              <tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-4">Traveler</th>
+                <th className="px-5 py-4">Trip</th>
+                <th className="px-5 py-4">Travel date</th>
+                <th className="px-5 py-4">Guests</th>
+                <th className="px-5 py-4">Amount</th>
+                <th className="px-5 py-4">Status</th>
+                <th className="px-5 py-4"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((booking) => (
+                <tr className="text-xs transition hover:bg-slate-50/70" key={booking.id}>
+                  <td className="px-5 py-4">
+                    <div className="font-bold text-navy">{booking.traveler}</div>
+                    <div className="mt-1 text-[10px] text-slate-400">{booking.email}</div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="font-bold text-navy">{booking.packageTitle}</div>
+                    <div className="mt-1 text-[10px] text-slate-400">{booking.destination}</div>
+                  </td>
+                  <td className="px-5 py-4 text-slate-500">{booking.travelDate}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">{booking.guests}</td>
+                  <td className="px-5 py-4 font-bold text-navy">{peso(booking.amount)}</td>
+                  <td className="px-5 py-4">
+                    <AdminStatusBadge value={booking.status} />
+                  </td>
+                  <td className="px-5 py-4">
+                    <button
+                      type="button"
+                      className="rounded-lg px-2.5 py-1 text-xs font-bold text-teal hover:bg-teal/10"
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 }

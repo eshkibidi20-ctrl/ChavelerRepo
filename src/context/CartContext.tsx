@@ -5,7 +5,12 @@ interface CartContextValue {
   items: CartItemDto[];
   count: number;
   total: number;
-  addItem: (packageItem: TourPackageDto, travelDate: string, adults: number, children: number) => void;
+  addItem: (
+    packageItem: TourPackageDto,
+    travelDate: string,
+    adults: number,
+    children: number,
+  ) => void;
   removeItem: (id: string) => void;
   updateItem: (id: string, patch: Partial<Pick<CartItemDto, 'adults' | 'children'>>) => void;
   clear: () => void;
@@ -14,23 +19,70 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | null>(null);
 const storageKey = 'chaveler-trip-cart';
 
+const getChildRate = (promoPrice: number) => Math.round(promoPrice * 0.5);
+
+const loadInitialCart = (): CartItemDto[] => {
+  try {
+    const saved = window.localStorage.getItem(storageKey);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? (parsed as CartItemDto[]) : [];
+  } catch {
+    return [];
+  }
+};
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItemDto[]>(() => {
-    const saved = localStorage.getItem(storageKey);
-    return saved ? JSON.parse(saved) as CartItemDto[] : [];
-  });
+  const [items, setItems] = useState<CartItemDto[]>(loadInitialCart);
 
-  useEffect(() => localStorage.setItem(storageKey, JSON.stringify(items)), [items]);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(items));
+    } catch {
+      // Ignore storage quota or restricted-mode write errors
+    }
+  }, [items]);
 
-  const value = useMemo<CartContextValue>(() => ({
-    items,
-    count: items.reduce((sum, item) => sum + item.adults + item.children, 0),
-    total: items.reduce((sum, item) => sum + item.package.promoPrice * item.adults + item.package.promoPrice * 0.5 * item.children, 0),
-    addItem: (packageItem, travelDate, adults, children) => setItems((current) => [...current.filter((item) => item.id !== packageItem.id), { id: packageItem.id, package: packageItem, travelDate, adults, children }]),
-    removeItem: (id) => setItems((current) => current.filter((item) => item.id !== id)),
-    updateItem: (id, patch) => setItems((current) => current.map((item) => item.id === id ? { ...item, ...patch } : item)),
-    clear: () => setItems([]),
-  }), [items]);
+  const value = useMemo<CartContextValue>(
+    () => ({
+      items,
+      count: items.reduce((sum, item) => sum + item.adults + item.children, 0),
+      total: items.reduce(
+        (sum, item) =>
+          sum + item.package.promoPrice * item.adults + getChildRate(item.package.promoPrice) * item.children,
+        0,
+      ),
+      addItem: (packageItem, travelDate, adults, children) => {
+        const safeAdults = Math.max(1, adults);
+        const safeChildren = Math.max(0, children);
+        const entryId = `${packageItem.id}:${travelDate}`;
+
+        setItems((current) => [
+          ...current.filter((item) => item.id !== entryId),
+          {
+            id: entryId,
+            package: packageItem,
+            travelDate,
+            adults: safeAdults,
+            children: safeChildren,
+          },
+        ]);
+      },
+      removeItem: (id) => setItems((current) => current.filter((item) => item.id !== id)),
+      updateItem: (id, patch) =>
+        setItems((current) =>
+          current.map((item) => {
+            if (item.id !== id) return item;
+            const nextAdults = patch.adults !== undefined ? Math.max(1, patch.adults) : item.adults;
+            const nextChildren =
+              patch.children !== undefined ? Math.max(0, patch.children) : item.children;
+            return { ...item, adults: nextAdults, children: nextChildren };
+          }),
+        ),
+      clear: () => setItems([]),
+    }),
+    [items],
+  );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

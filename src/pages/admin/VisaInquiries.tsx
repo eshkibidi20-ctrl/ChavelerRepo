@@ -1,7 +1,143 @@
-import { useEffect, useState } from 'react';
+// AdminVisaInquiries.tsx
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CheckCircle2, Clock3, FileText, Search } from 'lucide-react';
 import { getAdminVisaInquiries } from '@/services/adminService';
 import type { AdminVisaInquiry } from '@/admin/types';
 import AdminStatusBadge from '@/components/ui/AdminStatusBadge';
 
-export default function AdminVisaInquiries() { const [items, setItems] = useState<AdminVisaInquiry[]>([]); useEffect(() => { void getAdminVisaInquiries().then(setItems); }, []); return <div><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><div className="text-xs font-extrabold uppercase tracking-[.18em] text-teal">Client care</div><h1 className="mt-2 font-display text-3xl font-extrabold text-navy">Visa inquiries</h1><p className="mt-2 text-sm text-slate-500">Keep every traveler informed from checklist to submission.</p></div><button className="flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-navy"><FileText size={15} /> Download queue</button></div><div className="mt-8 grid gap-4 sm:grid-cols-3"><div className="rounded-2xl border border-slate-200 bg-white p-5"><Clock3 className="text-coral" size={19} /><div className="mt-5 text-2xl font-extrabold text-navy">4h 12m</div><div className="mt-1 text-xs text-slate-400">Average response time</div></div><div className="rounded-2xl border border-slate-200 bg-white p-5"><CheckCircle2 className="text-teal" size={19} /><div className="mt-5 text-2xl font-extrabold text-navy">92%</div><div className="mt-1 text-xs text-slate-400">Completed successfully</div></div><div className="rounded-2xl bg-navy p-5 text-white"><div className="text-xs font-bold text-teal-200">Queue health</div><div className="mt-5 flex items-center justify-between"><span className="text-2xl font-extrabold">9 open</span><span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold text-teal-200">On track</span></div></div></div><div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row"><div className="flex flex-1 items-center gap-2 rounded-xl bg-slate-50 px-3"><Search size={16} className="text-slate-400" /><input placeholder="Search traveler or destination" className="w-full bg-transparent py-3 text-sm outline-none" /></div><select className="rounded-xl bg-slate-50 px-3 text-xs font-bold text-slate-600 outline-none"><option>All statuses</option><option>New</option><option>In Progress</option><option>Completed</option></select></div><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left"><thead><tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400"><th className="px-5 py-4">Traveler</th><th className="px-5 py-4">Destination</th><th className="px-5 py-4">Submitted</th><th className="px-5 py-4">Priority</th><th className="px-5 py-4">Status</th><th className="px-5 py-4"></th></tr></thead><tbody className="divide-y divide-slate-100">{items.map((item) => <tr className="text-xs hover:bg-slate-50/70" key={item.id}><td className="px-5 py-4"><div className="font-bold text-navy">{item.traveler}</div><div className="mt-1 text-[10px] text-slate-400">{item.email}</div></td><td className="px-5 py-4 font-bold text-slate-600">{item.country}</td><td className="px-5 py-4 text-slate-500">{item.submittedAt}</td><td className="px-5 py-4"><span className={item.priority === 'High' ? 'font-bold text-coral' : 'text-slate-500'}>{item.priority}</span></td><td className="px-5 py-4"><AdminStatusBadge value={item.status} /></td><td className="px-5 py-4"><button className="flex items-center gap-1 text-xs font-bold text-teal">Open <ArrowRight size={13} /></button></td></tr>)}</tbody></table></div></div></div>; }
+export default function AdminVisaInquiries() {
+  const [items, setItems] = useState<AdminVisaInquiry[]>([]);
+  const [query, setQuery] = useState('');
+  const [status, setStatus] = useState('All statuses');
+
+  useEffect(() => {
+    void getAdminVisaInquiries().then(setItems);
+  }, []);
+
+  const filtered = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          (status === 'All statuses' || item.status === status) &&
+          `${item.traveler} ${item.email} ${item.country}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+      ),
+    [items, query, status],
+  );
+
+  return (
+    <div>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <div className="text-xs font-extrabold uppercase tracking-[.18em] text-teal">
+            Client care
+          </div>
+          <h1 className="mt-2 font-display text-3xl font-extrabold text-navy">Visa inquiries</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Keep every traveler informed from checklist to submission.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-navy transition hover:border-slate-300"
+        >
+          <FileText size={15} /> Download queue
+        </button>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <Clock3 className="text-coral" size={19} />
+          <div className="mt-5 text-2xl font-extrabold text-navy">4h 12m</div>
+          <div className="mt-1 text-xs text-slate-400">Average response time</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <CheckCircle2 className="text-teal" size={19} />
+          <div className="mt-5 text-2xl font-extrabold text-navy">92%</div>
+          <div className="mt-1 text-xs text-slate-400">Completed successfully</div>
+        </div>
+        <div className="rounded-2xl bg-navy p-5 text-white">
+          <div className="text-xs font-bold text-teal-200">Queue health</div>
+          <div className="mt-5 flex items-center justify-between">
+            <span className="text-2xl font-extrabold">{items.length || 9} open</span>
+            <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold text-teal-200">
+              On track
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row">
+          <div className="flex flex-1 items-center gap-2 rounded-xl bg-slate-50 px-3 ring-1 ring-transparent focus-within:bg-white focus-within:ring-teal">
+            <Search size={16} className="text-slate-400" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search traveler or destination"
+              className="w-full bg-transparent py-3 text-sm text-navy outline-none"
+            />
+          </div>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="rounded-xl bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-600 outline-none focus:ring-1 focus:ring-teal"
+          >
+            <option>All statuses</option>
+            <option>New</option>
+            <option>In Progress</option>
+            <option>Completed</option>
+          </select>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left">
+            <thead>
+              <tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-4">Traveler</th>
+                <th className="px-5 py-4">Destination</th>
+                <th className="px-5 py-4">Submitted</th>
+                <th className="px-5 py-4">Priority</th>
+                <th className="px-5 py-4">Status</th>
+                <th className="px-5 py-4"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((item) => (
+                <tr className="text-xs transition hover:bg-slate-50/70" key={item.id}>
+                  <td className="px-5 py-4">
+                    <div className="font-bold text-navy">{item.traveler}</div>
+                    <div className="mt-1 text-[10px] text-slate-400">{item.email}</div>
+                  </td>
+                  <td className="px-5 py-4 font-bold text-slate-600">{item.country}</td>
+                  <td className="px-5 py-4 text-slate-500">{item.submittedAt}</td>
+                  <td className="px-5 py-4">
+                    <span
+                      className={
+                        item.priority === 'High' ? 'font-bold text-coral' : 'text-slate-500'
+                      }
+                    >
+                      {item.priority}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <AdminStatusBadge value={item.status} />
+                  </td>
+                  <td className="px-5 py-4">
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 text-xs font-bold text-teal hover:underline"
+                    >
+                      Open <ArrowRight size={13} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
